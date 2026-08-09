@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const logger = require('./logger');
+const tenantIsolation = require('./middleware/tenantIsolation');
 // Initialize OpenTelemetry tracing (side-effect import)
 require('./tracing');
 
