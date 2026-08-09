@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const logger = require('./logger');
+const apiKeyRateLimiter = require('./middleware/apiKeyRateLimiter');
 // Initialize OpenTelemetry tracing (side-effect import)
 require('./tracing');
 
@@ -10,6 +11,8 @@ const app = express();
 // Core middleware
 app.use(express.json()); // JSON body parsing
 app.use(cors()); // Enable CORS for all origins (adjust in production)
+// Apply API key rate limiting middleware globally
+app.use(apiKeyRateLimiter);
 
 // Winston request logging middleware
 app.use((req, res, next) => {
@@ -36,7 +39,7 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware (must be after routes)
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error', { error: err });
+  logger.error('Unhandled error', { error: err, stack: err.stack });
   res.status(500).json({ error: 'Internal Server Error' });
 });
 

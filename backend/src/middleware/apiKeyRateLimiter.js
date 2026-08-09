@@ -38,10 +38,14 @@ function getConfig() {
 }
 
 // Create the limiter instance.
+// Compute configuration once to avoid multiple reads.
+const { max, windowMs } = getConfig();
+
 const limiter = rateLimit({
-  windowMs: getConfig().windowMs,
-  max: getConfig().max,
-  keyGenerator: (req) => req.header('x-api-key') || req.ip,
+  windowMs,
+  max,
+  // Use only the API key as the identifier; requests without an API key are skipped.
+  keyGenerator: (req) => req.header('x-api-key'),
   skip: (req) => !req.header('x-api-key'), // Skip if no API key provided.
   handler: (req, res) => {
     const now = Date.now();
@@ -51,7 +55,7 @@ const limiter = rateLimit({
   },
   // Use Redis store if enabled.
   store: process.env.USE_REDIS === 'true' ? new RedisStore({
-    sendCommand: (...args) => redisClient.call(...args),
+    client: redisClient,
   }) : undefined,
 });
 
